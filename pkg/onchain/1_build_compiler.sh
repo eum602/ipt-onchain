@@ -1,0 +1,1 @@
+docker build . -t eum602/solcgen
