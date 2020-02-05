@@ -59,7 +59,8 @@ func EnableEnodeOnIPTable(c <-chan string) {
 	for v := range c {
 		fmt.Println("Adding new node to the ip tables", v)
 		//inserting a new rule
-		err = ipt.Append("filter", chain, "-s", v, "-j", "ACCEPT")
+		err = ipt.Append("filter", chain, "-p", "tcp", "-s", v, "--dport", "60606", "-j", "ACCEPT")
+		err = ipt.Append("filter", chain, "-p", "udp", "-s", v, "--dport", "60606", "-j", "ACCEPT")
 		//err = ipt.Append("filter", chain, "-s", "0/0", "-j", "ACCEPT")
 		if err != nil {
 			fmt.Printf("Append failed: %v", err)
