@@ -1,7 +1,7 @@
 package goipt
 
-import (	
-	"fmt"	
+import (
+	"fmt"
 	"github.com/coreos/go-iptables/iptables"
 )
 
@@ -23,6 +23,7 @@ func AddDefaultRules() {
 func PrepareTable() {
 
 }
+
 //SaveInitialTable : ...
 func SaveInitialTable() {
 	ipt, err := iptables.New()
@@ -36,8 +37,7 @@ func SaveInitialTable() {
 
 //EnableEnodeOnIPTable enables 60606 port on the desired node IP
 func EnableEnodeOnIPTable(c <-chan string) {
-	ipt, err := iptables.New()	
-	// Saving the list of chains before executing tests
+	ipt, err := iptables.New()
 
 	//deletes and creates a new one chain into the specified table.
 	err = ipt.ClearChain("filter", chain)

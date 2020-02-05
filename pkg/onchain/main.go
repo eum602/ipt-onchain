@@ -15,12 +15,12 @@ import (
 	"strconv"
 )
 
-var RPC_URL string = "your_rpc_url_to_besu_network"
-var addr string = "0x0000000000000000000000000000000000009999"
+var rpcURL string = os.Getenv("RPC_URL")
+var addr string = os.Getenv("NODE_INGRESS_CONTRACT_ADDRESS")
 
 //Readsm ...
 func Readsm(c chan<- string) {
-	client, err := ethclient.Dial(RPC_URL)
+	client, err := ethclient.Dial(rpcURL)
 	if err != nil {
 		fmt.Println("Error", err)
 		os.Exit(0)
@@ -83,7 +83,6 @@ func Readsm(c chan<- string) {
 
 		ip := getIP(recenode.Ip)
 		c <- ip
-		//fmt.Println(ip)
 	}
 
 	close(c)
