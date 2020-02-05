@@ -5,40 +5,11 @@ import (
 	"github.com/coreos/go-iptables/iptables"
 )
 
-var chain string = "onchain"
+var chain string = "ONCHAIN"
 
-//Iptgreet ...
-func Iptgreet(c <-chan string) {
-	for v := range c {
-		fmt.Println("Receiving values from Ethereum network", v)
-	}
-}
-
-//AddDefaultRules : Add the default rules for the linux machine
-func AddDefaultRules() {
-	fmt.Println("Adding some default rules...")
-}
-
-//PrepareTable : ...
-func PrepareTable() {
-
-}
-
-//SaveInitialTable : ...
-func SaveInitialTable() {
+//MainIpt ...
+func MainIpt(c <-chan string){
 	ipt, err := iptables.New()
-	originaListChain, err := ipt.ListChains("filter") //there are three tables by default ==>
-	//nat, filter mangle
-	if err != nil {
-		fmt.Printf("ListChains of Initial failed: %v", err)
-	}
-	fmt.Println(originaListChain)
-}
-
-//EnableEnodeOnIPTable enables 60606 port on the desired node IP
-func EnableEnodeOnIPTable(c <-chan string) {
-	ipt, err := iptables.New()
-
 	//deletes and creates a new one chain into the specified table.
 	err = ipt.ClearChain("filter", chain)
 	if err != nil {
@@ -46,6 +17,28 @@ func EnableEnodeOnIPTable(c <-chan string) {
 	} else {
 		fmt.Println("Successful deletion and creation of custom chain '", chain, "'")
 	}
+	EnableEnodeOnIPTable(c)
+	AddDefaultRules()	
+}
+
+//AddDefaultRules : Add the default rules for the linux machine
+func AddDefaultRules() {
+	fmt.Println("Appending default rules...")
+	ipt, err := iptables.New()
+	err = ipt.Append("filter", chain, "-p", "tcp", "--dport", "22", "-j", "ACCEPT")
+	err = ipt.Append("filter", chain, "-p", "tcp", "--dport", "80", "-j", "ACCEPT")
+	err = ipt.Append("filter", chain, "-p", "tcp", "--dport", "443", "-j", "ACCEPT")
+	err = ipt.Append("filter", chain, "-j", "DROP")
+	
+	//err = ipt.Append("filter", chain, "-s", "0/0", "-j", "ACCEPT")
+	if err != nil {
+		fmt.Printf("Append failed: %v", err)
+	}
+}
+
+//EnableEnodeOnIPTable enables 60606 port on the desired node IP
+func EnableEnodeOnIPTable(c <-chan string) {
+	ipt, err := iptables.New()	
 
 	// chain should be in listChain
 	listChain, err := ipt.ListChains("filter")
@@ -59,26 +52,13 @@ func EnableEnodeOnIPTable(c <-chan string) {
 	for v := range c {
 		fmt.Println("Adding new node to the ip tables", v)
 		//inserting a new rule
-		err = ipt.Append("filter", chain, "-p", "tcp", "-s", v, "--dport", "60606", "-j", "ACCEPT")
-		err = ipt.Append("filter", chain, "-p", "udp", "-s", v, "--dport", "60606", "-j", "ACCEPT")
+		err = ipt.AppendUnique("filter", chain, "-p", "tcp", "-s", v, "--dport", "60606", "-j", "ACCEPT")
+		err = ipt.AppendUnique("filter", chain, "-p", "udp", "-s", v, "--dport", "60606", "-j", "ACCEPT")
 		//err = ipt.Append("filter", chain, "-s", "0/0", "-j", "ACCEPT")
 		if err != nil {
 			fmt.Printf("Append failed: %v", err)
 		}
 	}
-
-	// err = ipt.ClearChain("filter", chain)
-	// if err != nil {
-	// 	fmt.Printf("ClearChain (of missing) failed: %v", err)
-	// }
-
-	//Deleting a chain ONLY of it is empty
-	// err = ipt.DeleteChain("filter", chain)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// fmt.Println("Successfull deletion of empty chain '", chain, "'")
-
 }
 
 func isIncluded(list []string, value string) bool {

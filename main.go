@@ -12,6 +12,6 @@ func main() {
 	go Readsm(c)
 
 	//call IPTABLES
-	EnableEnodeOnIPTable(c)
+	MainIpt(c)
 	fmt.Println("All done")
 }
