@@ -6,30 +6,27 @@ import (
 )
 
 var chain string = "ONCHAIN"
+var chainToAppendCustomChain = "INPUT"
 
 //MainIpt ...
-func MainIpt(c <-chan string){
-	ipt, err := iptables.New()
-	//deletes and creates a new one chain into the specified table.
-	err = ipt.ClearChain("filter", chain)
-	if err != nil {
-		fmt.Printf("ClearChain (of missing) failed: %v", err)
-	} else {
-		fmt.Println("Successful deletion and creation of custom chain '", chain, "'")
-	}
+func MainIpt(c <-chan string) {
+	ipt, _ := iptables.New()
 	EnableEnodeOnIPTable(c)
-	AddDefaultRules()	
+	err := ipt.AppendUnique("filter", chainToAppendCustomChain, "-s", "0/0", "-j", "ONCHAIN")
+	if err != nil {
+		fmt.Printf("Append failed: %v", err)
+	}
 }
 
 //AddDefaultRules : Add the default rules for the linux machine
-func AddDefaultRules() {
+func AddDefaultRules(chain string) {
 	fmt.Println("Appending default rules...")
 	ipt, err := iptables.New()
 	err = ipt.Append("filter", chain, "-p", "tcp", "--dport", "22", "-j", "ACCEPT")
 	err = ipt.Append("filter", chain, "-p", "tcp", "--dport", "80", "-j", "ACCEPT")
 	err = ipt.Append("filter", chain, "-p", "tcp", "--dport", "443", "-j", "ACCEPT")
 	err = ipt.Append("filter", chain, "-j", "DROP")
-	
+
 	//err = ipt.Append("filter", chain, "-s", "0/0", "-j", "ACCEPT")
 	if err != nil {
 		fmt.Printf("Append failed: %v", err)
@@ -38,7 +35,13 @@ func AddDefaultRules() {
 
 //EnableEnodeOnIPTable enables 60606 port on the desired node IP
 func EnableEnodeOnIPTable(c <-chan string) {
-	ipt, err := iptables.New()	
+	ipt, err := iptables.New()
+	err = ipt.ClearChain("filter", chain)
+	if err != nil {
+		fmt.Printf("ClearChain (of missing) failed: %v", err)
+	} else {
+		fmt.Println("Successful deletion and creation of custom chain '", chain, "'")
+	}
 
 	// chain should be in listChain
 	listChain, err := ipt.ListChains("filter")
@@ -54,7 +57,6 @@ func EnableEnodeOnIPTable(c <-chan string) {
 		//inserting a new rule
 		err = ipt.AppendUnique("filter", chain, "-p", "tcp", "-s", v, "--dport", "60606", "-j", "ACCEPT")
 		err = ipt.AppendUnique("filter", chain, "-p", "udp", "-s", v, "--dport", "60606", "-j", "ACCEPT")
-		//err = ipt.Append("filter", chain, "-s", "0/0", "-j", "ACCEPT")
 		if err != nil {
 			fmt.Printf("Append failed: %v", err)
 		}
