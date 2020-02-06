@@ -31,7 +31,7 @@ func AddDefaultRules(chain string) {
 	fmt.Println("Appending default rules...")
 	ipt, err := iptables.New()
 	err = ipt.AppendUnique("filter", chain, "-i", "lo", "-j", "ACCEPT")
-	err = ipt.AppendUnique("filter", chain, "-m", "conntrack","--ctstate","RELATED,ESTABLISHED", "-j", "ACCEPT")
+	err = ipt.AppendUnique("filter", chain, "-m", "conntrack", "--ctstate", "RELATED,ESTABLISHED", "-j", "ACCEPT")
 	err = ipt.AppendUnique("filter", chain, "-p", "tcp", "--dport", "22", "-j", "ACCEPT")
 	err = ipt.AppendUnique("filter", chain, "-p", "tcp", "--dport", "80", "-j", "ACCEPT")
 	err = ipt.AppendUnique("filter", chain, "-p", "tcp", "--dport", "443", "-j", "ACCEPT")
