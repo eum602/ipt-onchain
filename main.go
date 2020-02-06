@@ -7,11 +7,9 @@ import (
 )
 
 func main() {
-	//read from ethereum
-	c := make(chan string)
-	go Readsm(c)
-
+	c := fanIn(Readsm(), GetAddedNodeLogs())
 	//call IPTABLES
+	//Iptgreet(c)
 	MainIpt(c)
 	fmt.Println("All done")
 }
