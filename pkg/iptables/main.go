@@ -2,6 +2,9 @@ package goipt
 
 import (
 	"fmt"
+	"os"
+
+	"strconv"
 
 	"github.com/coreos/go-iptables/iptables"
 )
@@ -10,7 +13,7 @@ var chain string = "ONCHAIN"
 var chainToAppendCustomChain = "INPUT"
 
 var defaultSecurityRules = "DEFAULTSECURITYRULES"
-var addDefaultSecurityRules = true
+var addDefaultSecurityRules = getDefaultSecurityRulesConfig()
 
 //MainIpt ...
 func MainIpt(c <-chan string) {
@@ -133,4 +136,13 @@ func isIncluded(list []string, value string) bool {
 		}
 	}
 	return false
+}
+
+func getDefaultSecurityRulesConfig() bool {
+	v, err := strconv.ParseBool(os.Getenv("ADD_DEFAULT_SECURITY_RULES"))
+	if err != nil {
+		fmt.Println("Found and error while getting security rule variable (ADD_DEFAULT_SECURITY_RULES) config from environment ... defaulting  to false")
+		return false
+	}
+	return v
 }
