@@ -4,7 +4,7 @@
 
 ## How ipt-onchain works
 
-ipt-onchain is a particular implementation that allows a user secure its connections to a server by using smart contracts as a source of trust.
+In a blockchain network, ipt-onchain is a particular implementation that allows a user secure its **server** connections to another participants in the network by using smart contracts as a source of trust.
 
 In this implementation a daemon listens to an ethereum smart contract which tells the node to whom to establish a secure connection.
 
@@ -12,7 +12,7 @@ Basically two diagrams shows how it works:
 
 * An admin adds/remove a new participant in the newtowrk by adding this to a permissioning smart contract: <img src="images/admin_updates.png">
 
-* The daemon realizes a new connection has been added/removed in the smart contracct and updates its *firewall rule*: <img src="images/daemon_reacts.png">
+* The daemon (that runs on your server) realizes a new connection has been added/removed in the smart contract and updates its *firewall rules*: <img src="images/daemon_reacts.png">
 
 ## Requisites
 
@@ -26,9 +26,8 @@ Basically two diagrams shows how it works:
 
 ### Deploy the onchain permissioning contracts
 
-* To interact with this project you should should have deployed the smart contract to that allows you dinamically set which participants are allowed to connect.
+* To interact with this project you should have deployed the smart contract to that allows you dinamically set which participants are allowed to connect.
 There are some permissioning smart contracts implementations out there.
-
 Particularly this project uses the [Pegasys implementation](https://github.com/PegaSysEng/permissioning-smart-contracts). Please follow the [instructions](https://github.com/PegaSysEng/permissioning-smart-contracts) in order to deploy the smart contract in a set of nodes.
 
 ### Clone the repository
@@ -76,3 +75,12 @@ chmod +x env.sh
 source env.sh
 go run *.go
 ```
+
+### Results
+
+* Its is expected for you to have a chain "ONCHAIN" into the "filter" ip table in the INPUT chain.
+* Additionally if you configured *ADD_DEFAULT_SECURITY_RULES* environment variable as 'true' then and additional chain "DEFAULTSECURITYRULES" will be added into the INPUT chain in the "filter" ip table.
+
+## Contributions
+
+Please feel free to contribute to this project.
