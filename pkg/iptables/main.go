@@ -2,28 +2,86 @@ package goipt
 
 import (
 	"fmt"
+
 	"github.com/coreos/go-iptables/iptables"
 )
 
 var chain string = "ONCHAIN"
 var chainToAppendCustomChain = "INPUT"
 
+var defaultSecurityRules = "DEFAULTSECURITYRULES"
+var addDefaultSecurityRules = true
+
 //MainIpt ...
 func MainIpt(c <-chan string) {
 	ipt, err := iptables.New()
+
 	err = ipt.ClearChain("filter", chain)
 	if err != nil {
 		fmt.Printf("ClearChain (of missing) failed: %v", err)
 	} else {
 		fmt.Println("Successful deletion and creation of custom chain '", chain, "'")
 	}
+
+	insertChain(ipt, chain, chainToAppendCustomChain, 1)
+
+	err = ipt.ClearChain("filter", defaultSecurityRules)
+	if err != nil {
+		fmt.Printf("ClearChain (of missing) failed: %v", err)
+	} else {
+		fmt.Println("Successful deletion and creation of custom chain '", defaultSecurityRules, "'")
+	}
+
+	if addDefaultSecurityRules {
+		insertChain(ipt, defaultSecurityRules, chainToAppendCustomChain, 2)
+		//Adding Default rules
+		AddDefaultRules(defaultSecurityRules)
+	} else { //Delete the default security chain and remove from main chain
+		fmt.Println("Making sure no previous default security chain exist")
+		err = ipt.Delete("filter", chainToAppendCustomChain, "-s", "0/0", "-j", defaultSecurityRules)
+		if err != nil {
+			fmt.Println("No default security chain found...")
+		}
+		err = ipt.DeleteChain("filter", defaultSecurityRules)
+		if err != nil {
+			fmt.Println("Something went wrong while deleting security rules")
+		}
+
+	}
+
 	// AddDefaultRules(chainToAppendCustomChain)
 	EnableEnodeOnIPTable(c)
-	err = ipt.AppendUnique("filter", chainToAppendCustomChain, "-s", "0/0", "-j", chain)
-	if err != nil {
-		fmt.Printf("Append failed: %v", err)
+}
+
+func insertChain(ipt *iptables.IPTables, chain, chainToAppendCustomChain string, pos int) {
+	isCustomChainAdded := searchChain(chain, chainToAppendCustomChain)
+	if isCustomChainAdded {
+		fmt.Println("Found chain ", chain, " on table ", chainToAppendCustomChain, " skipping adding process ...")
+	} else {
+		fmt.Println("Adding chain ", chain)
+		//Add custom chain
+		err := ipt.Insert("filter", chainToAppendCustomChain, pos, "-s", "0/0", "-j", chain)
+		if err != nil {
+			fmt.Printf("Error while adding custom chain %v", err)
+		}
 	}
-	AddDefaultRules(chainToAppendCustomChain)
+
+}
+
+func searchChain(chainToSearch, chainWhereToSearch string) bool {
+	ipt, err := iptables.New()
+	rules, err := ipt.List("filter", chainWhereToSearch)
+	if err != nil {
+		fmt.Printf("List failed: %v", err)
+	}
+
+	for _, v := range rules {
+		if v == "-A INPUT -j "+chainToSearch {
+			return true
+		}
+	}
+
+	return false
 }
 
 //AddDefaultRules : Add the default rules for the linux machine
