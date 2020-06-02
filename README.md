@@ -2,7 +2,7 @@
 
 ## Introduction
 
-## How ipt-onchain works
+### How ipt-onchain works?
 
 In a blockchain network, ipt-onchain is a particular implementation that allows a user secure its **server** connections to another participants in the network by using smart contracts as a source of trust.
 
